@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nudge or Nag</title>
+<meta name="description" content="When should a job page wave an Optimize nudge? A Bayesian Beta-Binomial Monte Carlo prototype by Shriya Shekatkar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&family=Space+Mono:wght@400;700&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --hero-bg:#efeef0; --hero-pink:#f59ee6; --hero-ink:#b0207f;
+  --satin:#f8c6da; --satin-2:#fbdbe8; --cherry:#c8102e; --cherry-dk:#8f0a20; --wood:#c88a4e; --ink:#3a1020;
+  --stripe-pink:#f2a7c3; --stripe-lilac:#c9b6e4; --stripe-cream:#fff6e0; --terry:#f5dc4a; --terry-dk:#6b5300;
+  --night:#0b0b0f; --chrome-1:#f4f4f8; --chrome-2:#b9bac4; --chrome-3:#6f707c; --poppy:#e8452c; --coral:#f37a5a; --vine:#7da848; --gold:#c9a24a; --night-ink:#ececf2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--hero-bg);color:var(--ink);font-family:"Inter Tight",system-ui,sans-serif;line-height:1.5;overflow-x:hidden}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+/* grain overlay */
+.grain{position:relative}
+.grain::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;mix-blend-mode:multiply;
+ background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4 0 0 0 0 0.3 0 0 0 0 0.35 0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+
+/* ===== HERO (pin: Affirming) ===== */
+.hero{min-height:88vh;display:flex;align-items:center;padding:56px 0 40px;overflow:hidden}
+.hero .wrap{position:relative;width:100%}
+.echo{position:absolute;right:-2vw;top:-30px;font-weight:400;font-size:clamp(70px,16vw,210px);line-height:.92;color:var(--hero-pink);opacity:.55;text-align:right;pointer-events:none;user-select:none;letter-spacing:-.02em}
+.echo span{display:block}
+.echo span:nth-child(2){margin-right:8vw}
+.echo span:nth-child(3){margin-right:2vw}
+.kicker{font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#5b3550}
+.hero h1{position:relative;font-weight:400;font-size:clamp(40px,8vw,104px);line-height:.98;margin:.2em 0 .3em;color:var(--hero-ink);letter-spacing:-.03em;max-width:12ch}
+.hero h1 .l2{display:block;padding-left:1.2ch}
+.hero h1 .l3{display:block;padding-left:.4ch}
+.hero .sub{position:relative;font-size:clamp(17px,2.2vw,21px);max-width:620px;color:#3b2333}
+.hero .sub a{color:#8a145f;font-weight:600}
+.byline{position:relative;margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chip{display:inline-block;padding:7px 14px;border-radius:999px;border:1.5px solid #b0207f;color:#7a1655;background:#fff9fd;font-size:14px;font-weight:600}
+.floaty{animation:floaty 6s ease-in-out infinite}
+@keyframes floaty{50%{transform:translateY(-10px)}}
+
+/* ===== CAKE CARDS (pin: diy cake corset) ===== */
+.section{padding:56px 0}
+.section h2{font-size:clamp(28px,4.5vw,44px);letter-spacing:-.02em;margin:0 0 6px}
+.section .lede{max-width:720px;margin:0 0 28px;color:#4a2234}
+.cake-bg{background:linear-gradient(180deg,#efeef0 0,#f6e4ec 100%)}
+.masonry{columns:3 300px;column-gap:20px}
+.card{break-inside:avoid;margin:0 0 20px;position:relative;border-radius:18px 18px 22px 22px;padding:22px 20px 30px;
+  background:radial-gradient(120% 80% at 30% 0%,#fde8f1 0,var(--satin) 55%,#f1aecb 100%);color:var(--ink);
+  box-shadow:0 2px 0 #e79bbd,0 14px 30px -12px rgba(140,30,80,.35)}
+.card::before{content:"";position:absolute;left:0;right:0;top:-9px;height:12px;
+  background:radial-gradient(circle at 8px 12px,#fbd2e3 7px,transparent 7.5px) repeat-x;background-size:16px 12px}
+.card::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:12px;
+  background:radial-gradient(circle at 8px 0,#f1aecb 7px,transparent 7.5px) repeat-x;background-size:16px 12px}
+.card h3{margin:0 0 8px;font-size:20px}
+.card p,.card li{font-size:15.5px}
+.card ul{padding-left:18px;margin:6px 0}
+.sprinkles{height:14px;margin:4px 0 12px;border-radius:7px;background-color:#fff4f8;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='14'><rect x='3' y='5' width='8' height='3' rx='1.5' fill='%23e8452c' transform='rotate(-20 7 6)'/><rect x='16' y='3' width='8' height='3' rx='1.5' fill='%233aa0e0' transform='rotate(25 20 4)'/><rect x='28' y='7' width='8' height='3' rx='1.5' fill='%23f5c22a' transform='rotate(-35 32 8)'/><rect x='40' y='4' width='8' height='3' rx='1.5' fill='%2366b84a' transform='rotate(15 44 5)'/><rect x='50' y='8' width='7' height='3' rx='1.5' fill='%239a5be0' transform='rotate(-10 53 9)'/></svg>")}
+.pin-cap{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a2346;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.cherry-dot{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a96 0,var(--cherry) 45%,var(--cherry-dk) 100%);display:inline-block}
+table.guard{width:100%;border-collapse:collapse;font-size:14.5px}
+table.guard td{padding:6px 4px;border-bottom:1px dashed #d98aab;vertical-align:top}
+table.guard td:last-child{font-family:"Space Mono",monospace;font-size:13px;white-space:nowrap;text-align:right}
+
+/* cherry buttons */
+.btn{font:600 15px "Inter Tight",sans-serif;border:0;border-radius:999px;padding:10px 18px;cursor:pointer;color:#fff;
+  background:radial-gradient(circle at 30% 25%,#ff6b7d 0,var(--cherry) 45%,var(--cherry-dk) 100%);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 4px 10px -4px rgba(150,0,30,.6)}
+.btn:hover{filter:brightness(1.08)}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn.ghost{background:#fff;color:var(--cherry-dk);box-shadow:inset 0 0 0 2px var(--cherry)}
+
+/* ===== SIM ROOM (pin: Fantasy Art, LaKase Perry) ===== */
+.room{background:var(--night);color:var(--night-ink);position:relative;overflow:hidden}
+.room h2{font-family:"Cinzel",serif;color:var(--chrome-1);letter-spacing:.02em}
+.room .lede{color:#c9cad3}
+.vine{position:absolute;pointer-events:none;opacity:.9}
+.vine.l{left:-30px;top:20px;width:160px}
+.vine.r{right:-30px;bottom:30px;width:170px;transform:scaleX(-1)}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;position:relative;align-items:start}
+.panel{border-radius:16px;padding:16px;position:relative;
+  background:linear-gradient(160deg,#2a2b33 0,#14151a 40%,#1d1e25 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 0 0 1px #3a3b45,0 20px 40px -20px #000}
+.plate-title{font-family:"Cinzel",serif;font-size:15px;letter-spacing:.08em;color:var(--chrome-1);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.rivet{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0,#c9cad3 35%,#5e5f6a 100%);display:inline-block}
+canvas{display:block;width:100%;border-radius:10px}
+.controls{display:grid;gap:14px}
+.ctrl label{display:flex;justify-content:space-between;font-size:14px;color:#dcdde6}
+.ctrl output{font-family:"Space Mono",monospace;color:var(--terry)}
+.ctrl small{display:block;color:#a9aab6;font-size:12.5px;margin-top:2px}
+input[type=range]{width:100%;accent-color:var(--poppy);height:28px}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:#cfd0da;margin-top:10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+/* KPI badges (pin: Cutie Pony Room Shoes) */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}
+.kpi{position:relative;border-radius:22px;padding:14px 14px 12px;color:#2b1a22;overflow:hidden;
+  background:repeating-linear-gradient(90deg,var(--stripe-pink) 0 9px,var(--stripe-cream) 9px 14px,var(--stripe-lilac) 14px 22px,var(--stripe-cream) 22px 26px);
+  box-shadow:inset 0 0 0 3px #ea8db4}
+.kpi .sole{background:var(--terry);border-radius:16px;padding:10px 12px;position:relative;
+  background-image:radial-gradient(rgba(255,255,255,.35) 1px,transparent 1.4px);background-size:5px 5px;box-shadow:inset 0 0 0 2px #e2c42a}
+.kpi .k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--terry-dk)}
+.kpi .v{font:700 clamp(24px,3.4vw,34px) "Space Mono",monospace;color:#2b1a00;line-height:1.1}
+.kpi .g{font-size:12.5px;margin-top:2px;color:#3d2f00}
+.kpi .sun{position:absolute;right:8px;top:8px;width:28px;height:28px}
+.pass{color:#1d5e14;font-weight:700}.fail{color:#9a0c1f;font-weight:700}
+.compare{font-size:14px;color:#d5d6df;margin-top:6px}
+.compare b{color:#fff}
+
+/* memo */
+.memo{background:var(--satin-2)}
+.memo-card{max-width:860px;margin:0 auto}
+.memo-card .verdict{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.01em;margin:4px 0 10px}
+.memo-card dl{display:grid;grid-template-columns:150px 1fr;gap:8px 16px;margin:0}
+.memo-card dt{font-family:"Space Mono",monospace;font-size:13px;text-transform:uppercase;color:#7a2346;padding-top:2px}
+.memo-card dd{margin:0}
+.vp{margin-top:16px;padding:14px 16px;border-radius:14px;background:#fff;border:2px dashed var(--cherry);font-weight:600}
+
+/* math + code */
+.math-bg{background:#efeef0}
+code,pre{font-family:"Space Mono",monospace}
+pre{background:#1a0d14;color:#ffe7f1;padding:16px;border-radius:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:0;max-width:100%}
+.code-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.code-grid h3{margin:0 0 8px}
+.code-grid>div,.grid>div{min-width:0}
+.formula{font-family:"Space Mono",monospace;background:#fff;border-radius:10px;padding:10px 12px;font-size:14px;overflow-x:auto}
+
+footer{background:var(--night);color:#c9cad3;padding:28px 0 36px;font-size:14px}
+footer a{color:#ffd5e6}
+footer .credits{font-size:11px;color:#a3a4b0;margin-top:10px;line-height:1.6}
+footer .credits a{color:#c4c5d0}
+
+@media (max-width:860px){
+  .grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .code-grid{grid-template-columns:1fr}
+  .memo-card dl{grid-template-columns:1fr}
+  .memo-card dt{padding-top:8px}
+  .vine{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero grain">
+  <div class="wrap">
+    <div class="echo" aria-hidden="true"><span>nudge</span><span>not</span><span>nag</span></div>
+    <div class="kicker">APM Lab · decision prototype</div>
+    <h1>I nudge<span class="l2">only when</span><span class="l3">I'm sure.</span></h1>
+    <p class="sub">Mirrors the Oct 26, 2026 launch of <a href="https://docs.databricks.com/aws/en/release-notes/product/2026/october" target="_blank" rel="noopener">Lakeflow Performance Observability (GA)</a>: job-level query performance metrics plus an Optimize button that opens Genie Code. The hard call: <b>when should a job page wave that Optimize nudge at you</b> instead of waiting to be clicked?</p>
+    <div class="byline">
+      <span class="chip floaty">Shriya Shekatkar</span>
+      <span class="chip">UCLA · Stats 102C Monte Carlo Methods</span>
+      <span class="chip">Method: Bayesian Beta-Binomial (Ch2)</span>
+    </div>
+  </div>
+</header>
+
+<!-- DECISION -->
+<section class="section cake-bg" id="decision">
+  <div class="wrap">
+    <h2>The decision</h2>
+    <p class="lede">A performance page is only useful if people trust its alarms. Badge too eagerly and data engineers learn to ignore it; badge too late and a slow job burns compute for weeks.</p>
+    <div class="masonry">
+      <article class="card">
+        <div class="pin-cap"><span class="cherry-dot"></span>Customer problem</div>
+        <div class="sprinkles"></div>
+        <h3>"Which of my 200 jobs actually got slower?"</h3>
+        <p>Run times are noisy. One slow run can be a cold cluster, a skewed input day, or a real regression. Owners don't have time to open every job, so they need the product to point at the few that truly drifted.</p>
+      </article>
+      <article class="card">
+        <div class="pin-cap"><span class="cherry-dot"></span>Proposed change</div>
+        <div class="sprinkles"></div>
+        <h3>A proactive "Optimize" badge</h3>
+        <p>Show a badge on the job list (and one digest notification per week) only when the posterior probability that a job's <b>slow-run rate is above 20%</b> clears a confidence bar τ. A "slow run" is one that takes more than 1.5× the job's trailing median.</p>
+      </article>
+      <article class="card">
+        <div class="pin-cap"><span class="cherry-dot"></span>Success metric</div>
+        <div class="sprinkles"></div>
+        <h3>Badge precision</h3>
+        <p>Share of badged jobs that were truly regressed. If people click a badge and find nothing wrong, the feature loses its credibility fast. Secondary: Optimize-button click-through from badged jobs.</p>
+      </article>
+      <article class="card">
+        <div class="pin-cap"><span class="cherry-dot"></span>Guardrails</div>
+        <div class="sprinkles"></div>
+        <table class="guard">
+          <tr><td>Precision (badge is real)</td><td>≥ 70%</td></tr>
+          <tr><td>Recall (regressions caught)</td><td>≥ 50%</td></tr>
+          <tr><td>False badges per 100 jobs</td><td>≤ 3</td></tr>
+          <tr><td>Runs needed before a badge can fire</td><td>≤ 12</td></tr>
+        </table>
+      </article>
+      <article class="card">
+        <div class="pin-cap"><span class="cherry-dot"></span>Stakeholders</div>
+        <div class="sprinkles"></div>
+        <ul>
+          <li>Data engineers who own jobs (they see the badge)</li>
+          <li>Lakeflow Jobs + observability eng (signal pipeline)</li>
+          <li>Genie Code team (receives the Optimize hand-off)</li>
+          <li>Platform admins watching spend; Support (fewer "why is it slow" tickets)</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- SIM ROOM -->
+<section class="section room" id="sim">
+  <svg class="vine l" viewBox="0 0 160 420" aria-hidden="true">
+    <path d="M40 0 C70 60 10 110 50 170 S20 290 60 420" stroke="#7da848" stroke-width="4" fill="none"/>
+    <g fill="#7da848"><ellipse cx="62" cy="55" rx="16" ry="6" transform="rotate(-30 62 55)"/><ellipse cx="28" cy="130" rx="16" ry="6" transform="rotate(30 28 130)"/><ellipse cx="55" cy="240" rx="16" ry="6" transform="rotate(-25 55 240)"/><ellipse cx="34" cy="330" rx="16" ry="6" transform="rotate(35 34 330)"/></g>
+    <g><circle cx="70" cy="95" r="13" fill="#e8452c"/><circle cx="70" cy="95" r="4" fill="#1a1a1a"/><circle cx="30" cy="205" r="11" fill="#f37a5a"/><circle cx="30" cy="205" r="3.5" fill="#1a1a1a"/><circle cx="66" cy="290" r="14" fill="#e8452c"/><circle cx="66" cy="290" r="4" fill="#1a1a1a"/></g>
+  </svg>
+  <svg class="vine r" viewBox="0 0 160 420" aria-hidden="true">
+    <path d="M40 0 C70 60 10 110 50 170 S20 290 60 420" stroke="#7da848" stroke-width="4" fill="none"/>
+    <g fill="#7da848"><ellipse cx="62" cy="55" rx="16" ry="6" transform="rotate(-30 62 55)"/><ellipse cx="28" cy="130" rx="16" ry="6" transform="rotate(30 28 130)"/><ellipse cx="55" cy="240" rx="16" ry="6" transform="rotate(-25 55 240)"/></g>
+    <g><circle cx="70" cy="95" r="12" fill="#f37a5a"/><circle cx="70" cy="95" r="4" fill="#1a1a1a"/><circle cx="30" cy="205" r="14" fill="#e8452c"/><circle cx="30" cy="205" r="4" fill="#1a1a1a"/></g>
+  </svg>
+  <div class="wrap">
+    <h2>The armory: live simulation</h2>
+    <p class="lede">240 simulated Lakeflow jobs. About 18% secretly regressed. Each job shows you only its last <i>n</i> runs. For every job I draw 400 samples from its Beta posterior and badge it when enough of them land above the 20% slow-run line. Seeded, so the same seed always tells the same story.</p>
+
+    <div class="kpis" id="kpis" aria-live="polite"></div>
+
+    <div class="grid">
+      <div class="panel">
+        <p class="plate-title"><span class="rivet"></span>Fleet of jobs <span class="rivet"></span></p>
+        <canvas id="fleet" width="700" height="420" role="img" aria-label="Grid of simulated jobs colored by whether they were badged and whether they truly regressed. Click a job to inspect its posterior."></canvas>
+        <div class="legend">
+          <span><i style="background:#e8452c"></i>badged, truly slow</span>
+          <span><i style="background:#f5dc4a"></i>badged, false alarm</span>
+          <span><i style="background:transparent;box-shadow:inset 0 0 0 2px #e8452c"></i>missed regression</span>
+          <span><i style="background:#9a9ba6"></i>quiet and healthy</span>
+        </div>
+        <p class="compare" id="compare"></p>
+      </div>
+      <div class="panel">
+        <p class="plate-title"><span class="rivet"></span>Controls</p>
+        <div class="controls">
+          <div class="ctrl"><label for="n">Runs observed per job <output id="nO"></output></label><input id="n" type="range" min="2" max="30" value="10"><small>More history = sharper posteriors, but a slower badge.</small></div>
+          <div class="ctrl"><label for="tau">Confidence bar τ <output id="tauO"></output></label><input id="tau" type="range" min="50" max="99" value="75"><small>Badge when P(slow-run rate &gt; 20% | runs) ≥ τ.</small></div>
+          <div class="ctrl"><label for="k">Prior strength (pseudo-runs) <output id="kO"></output></label><input id="k" type="range" min="1" max="40" value="4"><small>Prior centered at a 10% slow-run rate, what a healthy fleet looks like.</small></div>
+          <div class="btnrow">
+            <button class="btn" id="play">Play the runs</button>
+            <button class="btn ghost" id="reroll">Re-roll fleet</button>
+          </div>
+          <div class="ctrl" style="font-size:13px;color:#a9aab6">Seed: <span id="seedO" style="font-family:'Space Mono',monospace;color:#f5dc4a"></span></div>
+        </div>
+        <p class="plate-title" style="margin-top:16px"><span class="rivet"></span>Spotlight job posterior</p>
+        <canvas id="post" width="420" height="200" role="img" aria-label="Histogram of posterior draws for the selected job's slow-run rate, with the 20% line."></canvas>
+        <p class="compare" id="spot"></p>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <p class="plate-title"><span class="rivet"></span>Threshold sweep: precision and recall vs τ</p>
+      <canvas id="sweep" width="1000" height="220" role="img" aria-label="Line chart of precision and recall as the confidence bar changes."></canvas>
+      <div class="legend"><span><i style="background:#e8452c"></i>precision</span><span><i style="background:#7da848"></i>recall</span><span><i style="background:#f5dc4a"></i>your τ</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- MEMO -->
+<section class="section memo" id="memo">
+  <div class="wrap">
+    <article class="card memo-card">
+      <div class="pin-cap"><span class="cherry-dot"></span>Director memo · rewrites itself from the simulation</div>
+      <div class="sprinkles"></div>
+      <div class="verdict" id="mVerdict"></div>
+      <dl>
+        <dt>Evidence</dt><dd id="mEvidence"></dd>
+        <dt>Risks</dt><dd id="mRisks"></dd>
+        <dt>Rollout plan</dt><dd id="mPlan"></dd>
+        <dt>Next step</dt><dd id="mNext"></dd>
+      </dl>
+      <div class="vp" id="mVP"></div>
+    </article>
+  </div>
+</section>
+
+<!-- MATH -->
+<section class="section math-bg grain" id="math">
+  <div class="wrap">
+    <h2>The math, from my Monte Carlo course</h2>
+    <p class="lede">Chapter 2 of Stats 102C: treat the unknown as something with a distribution, and let evidence reshape it.</p>
+    <div class="masonry">
+      <article class="card"><h3>Frequentist vs Bayesian, in product words</h3><p>A frequentist says each job has one fixed slow-run rate and estimates it by the raw fraction: 2 slow out of 5 runs is 40%. With five runs that number swings wildly. A Bayesian says "I'm uncertain about the rate" and keeps a whole distribution for it, so 2 of 5 reads as "maybe high, not proven".</p></article>
+      <article class="card"><h3>Beta prior + Binomial runs = Beta posterior</h3><div class="formula">rate ~ Beta(a, b)<br>slow runs s of n ~ Binomial(n, rate)<br>⇒ rate | s ~ Beta(a + s, b + n − s)</div><p>Conjugacy means updating is just adding counts. My default prior Beta(0.4, 3.6) is worth 4 pseudo-runs at a 10% slow rate: a gentle nudge, not a wall.</p></article>
+      <article class="card"><h3>A weighted average you can explain</h3><p>Posterior mean = (a + s)/(a + b + n). It sits between the prior mean (10%) and the data mean (s/n), weighted by the prior's pseudo-runs vs n real runs. Crank the prior-strength slider to 40 and the prior dominates; drop it to 1 and the data does. A flat Beta(1,1) prior makes the most likely value equal to the raw fraction.</p></article>
+      <article class="card"><h3>Why Monte Carlo on top?</h3><p>The badge rule needs P(rate &gt; 20%), a tail area of the posterior. I estimate it the Chapter 1 way: draw 400 rates from each job's posterior and count the share above 20%. The count is Binomial, so the error shrinks like 1/√400 ≈ 2.5 points. That's plenty to tell 0.6 from 0.95.</p></article>
+      <article class="card"><h3>Credible intervals for the job page</h3><p>The 5th–95th percentile of the draws becomes the tooltip: "This job is slow on 18–47% of runs." That's a direct probability statement about this job, which an owner can act on, unlike a confidence interval's coverage promise about repeated experiments.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- REAL DATA -->
+<section class="section cake-bg" id="real">
+  <div class="wrap">
+    <h2>How I'd run it on real data</h2>
+    <p class="lede">Illustrative only: table and column names are made up to show the shape of the pipeline.</p>
+    <div class="code-grid">
+      <div>
+        <h3>1 · Count slow runs per job (SQL)</h3>
+<pre><code>WITH runs AS (
+  SELECT job_id, run_id, duration_s,
+         percentile(duration_s, 0.5)
+           OVER (PARTITION BY job_id
+                 ORDER BY start_ts
+                 ROWS BETWEEN 30 PRECEDING AND 11 PRECEDING) AS base_med,
+         ROW_NUMBER() OVER (PARTITION BY job_id
+                            ORDER BY start_ts DESC) AS rn
+  FROM ops.lab.job_run_history
+  WHERE start_ts &gt;= current_date() - INTERVAL 30 DAYS
+)
+SELECT job_id,
+       COUNT(*)                                  AS n_runs,
+       SUM(IF(duration_s &gt; 1.5 * base_med, 1, 0)) AS n_slow
+FROM runs
+WHERE rn &lt;= 10 AND base_med IS NOT NULL
+GROUP BY job_id;</code></pre>
+      </div>
+      <div>
+        <h3>2 · Posterior tail + badge (Python)</h3>
+<pre><code>import numpy as np
+rng = np.random.default_rng(102)
+A, B, CUT, TAU = 0.4, 3.6, 0.20, 0.75
+
+df = spark.table("ops.lab.job_slow_counts").toPandas()
+draws = rng.beta(A + df.n_slow.values[:, None],
+                 B + (df.n_runs - df.n_slow).values[:, None],
+                 size=(len(df), 400))
+df["p_slow"] = (draws &gt; CUT).mean(axis=1)
+df["ci_lo"], df["ci_hi"] = np.percentile(draws, [5, 95], axis=1)
+df["badge"] = df.p_slow &gt;= TAU
+
+(spark.createDataFrame(df)
+   .write.mode("overwrite")
+   .saveAsTable("ops.lab.optimize_badges"))</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Unofficial concept prototype by Shriya Shekatkar. All data is simulated. Not affiliated with any company.</p>
+    <p><a href="https://shriyashekatkar25-byte.github.io/apm-lab/">← Back to the APM Lab gallery</a></p>
+    <p class="credits">Design inspired by:
+      <a href="https://www.pinterest.com/pin/902268106616155137/" target="_blank" rel="noopener">Affirming (Lumi)</a> ·
+      <a href="https://www.pinterest.com/pin/897834875763833149/" target="_blank" rel="noopener">diy cake corset (Lulu)</a> ·
+      <a href="https://www.pinterest.com/pin/744360644705697676/" target="_blank" rel="noopener">Cutie Pony Room Shoes [Pink] (W Concept Global)</a> ·
+      <a href="https://www.pinterest.com/pin/96264510780156865/" target="_blank" rel="noopener">Fantasy Art pin (LaKase Perry)</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const N_JOBS=240, MAX_RUNS=30, DRAWS=400, CUT=0.20, PRIOR_MEAN=0.10, P_REG=0.18;
+const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// seeded RNG (mulberry32)
+function rngFrom(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+function normal(r){let u=0;while(u===0)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r());}
+function gamma(r,a){ if(a<1){return gamma(r,a+1)*Math.pow(r(),1/a);} const d=a-1/3,c=1/Math.sqrt(9*d);
+  for(;;){let x,v;do{x=normal(r);v=1+c*x;}while(v<=0);v=v*v*v;const u=r();
+    if(u<1-0.0331*x*x*x*x)return d*v; if(Math.log(u)<0.5*x*x+d*(1-v+Math.log(v)))return d*v;}}
+function beta(r,a,b){const x=gamma(r,a),y=gamma(r,b);return x/(x+y);}
+
+let seed=102, jobs=[], state={n:10,tau:0.75,k:4}, spotlight=0, results=null;
+const $=id=>document.getElementById(id);
+
+function buildFleet(){
+  const r=rngFrom(seed); jobs=[];
+  for(let i=0;i<N_JOBS;i++){
+    const reg = r()<P_REG;
+    const rate = reg ? beta(r,7,13) : beta(r,3,27);
+    const runs=[]; for(let j=0;j<MAX_RUNS;j++) runs.push(r()<rate?1:0); // Ch1: count uniforms below the rate
+    jobs.push({reg,rate,runs});
+  }
+}
+
+function evaluate(n,k){
+  const a=PRIOR_MEAN*k, b=(1-PRIOR_MEAN)*k;
+  const r=rngFrom(seed*7919+n*31+k);
+  return jobs.map(j=>{
+    let s=0; for(let t=0;t<n;t++) s+=j.runs[t];
+    let above=0; const d=new Float32Array(DRAWS);
+    for(let m=0;m<DRAWS;m++){const x=beta(r,a+s,b+n-s); d[m]=x; if(x>CUT)above++;}
+    return {s,p:above/DRAWS,draws:d,mle:s/n};
+  });
+}
+
+function score(res,tau){
+  let tp=0,fp=0,fn=0,tn=0;
+  res.forEach((q,i)=>{const b=q.p>=tau, t=jobs[i].reg; if(b&&t)tp++;else if(b)fp++;else if(t)fn++;else tn++;});
+  const prec=tp+fp?tp/(tp+fp):1, rec=tp+fn?tp/(tp+fn):0;
+  return {tp,fp,fn,tn,prec,rec,badges:tp+fp,fp100:fp/N_JOBS*100};
+}
+function naiveScore(res){ // raw fraction above 20%
+  let tp=0,fp=0,fn=0;
+  res.forEach((q,i)=>{const b=q.mle>CUT,t=jobs[i].reg;if(b&&t)tp++;else if(b)fp++;else if(t)fn++;});
+  return {prec:tp+fp?tp/(tp+fp):1,rec:tp+fn?tp/(tp+fn):0,fp100:fp/N_JOBS*100};
+}
+const pct=x=>Math.round(x*100)+'%';
+
+const SUN='<svg class="sun" viewBox="0 0 28 28" aria-hidden="true"><g stroke="#c97a00" stroke-width="1.6" fill="none" stroke-dasharray="2 1.6"><path d="M4 18a10 10 0 0 1 20 0"/><path d="M14 4v3M6 8l2 2M22 8l-2 2M2 14h3M26 14h-3"/></g></svg>';
+function kpi(k,v,g,ok){return '<div class="kpi">'+SUN+'<div class="sole"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="g">'+g+' · <span class="'+(ok?'pass':'fail')+'">'+(ok?'PASS':'MISS')+'</span></div></div></div>';}
+
+function render(){
+  results=evaluate(state.n,state.k);
+  draw();
+}
+function draw(){
+  const sc=score(results,state.tau), nv=naiveScore(results);
+  $('kpis').innerHTML=
+    kpi('Precision',pct(sc.prec),'goal ≥ 70%',sc.prec>=0.70)+
+    kpi('Recall',pct(sc.rec),'goal ≥ 50%',sc.rec>=0.50)+
+    kpi('False badges /100',sc.fp100.toFixed(1),'goal ≤ 3',sc.fp100<=3)+
+    kpi('Runs to decide',state.n,'goal ≤ 12',state.n<=12);
+  $('compare').innerHTML='Naive rule "raw slow fraction &gt; 20%": precision <b>'+pct(nv.prec)+'</b>, recall <b>'+pct(nv.rec)+'</b>, <b>'+nv.fp100.toFixed(1)+'</b> false badges per 100 jobs. Bayesian rule: <b>'+pct(sc.prec)+'</b> / <b>'+pct(sc.rec)+'</b> / <b>'+sc.fp100.toFixed(1)+'</b>.';
+  drawFleet(); drawPost(); drawSweep(); memo(sc,nv);
+  $('nO').textContent=state.n; $('tauO').textContent=state.tau.toFixed(2); $('kO').textContent=state.k; $('seedO').textContent=seed;
+}
+
+function fitCanvas(c,h){const w=c.clientWidth||c.width;const dpr=Math.min(window.devicePixelRatio||1,2);c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return {x,w,h};}
+
+let geo=null;
+function drawFleet(){
+  const c=$('fleet'); const cols=c.clientWidth<500?16:24; const rows=Math.ceil(N_JOBS/cols);
+  const w=c.clientWidth||700, cell=w/cols, h=cell*rows; const {x}=fitCanvas(c,h);
+  geo={cols,cell};
+  x.fillStyle='#0f1014';x.fillRect(0,0,w,h);
+  results.forEach((q,i)=>{
+    const cx=(i%cols+0.5)*cell, cy=(Math.floor(i/cols)+0.5)*cell, rr=cell*0.36;
+    const b=q.p>=state.tau,t=jobs[i].reg;
+    if(b&&t){ // poppy
+      x.fillStyle='#e8452c'; for(let p=0;p<5;p++){const a=p*Math.PI*2/5; x.beginPath(); x.arc(cx+Math.cos(a)*rr*.45,cy+Math.sin(a)*rr*.45,rr*.55,0,7); x.fill();}
+      x.fillStyle='#1a1a1a'; x.beginPath(); x.arc(cx,cy,rr*.28,0,7); x.fill();
+    } else if(b){ x.fillStyle='#f5dc4a'; x.beginPath(); x.arc(cx,cy,rr,0,7); x.fill(); x.strokeStyle='#8a6d00'; x.lineWidth=1.5; x.stroke();}
+    else { const g=x.createRadialGradient(cx-rr*.35,cy-rr*.4,1,cx,cy,rr); g.addColorStop(0,'#ffffff'); g.addColorStop(.35,'#b9bac4'); g.addColorStop(1,'#4c4d57');
+      x.fillStyle=g; x.beginPath(); x.arc(cx,cy,rr*.8,0,7); x.fill();
+      if(t){x.strokeStyle='#e8452c'; x.lineWidth=2.2; x.beginPath(); x.arc(cx,cy,rr,0,7); x.stroke();}
+    }
+    if(i===spotlight){x.strokeStyle='#c9a24a';x.lineWidth=2;x.strokeRect(cx-cell/2+1.5,cy-cell/2+1.5,cell-3,cell-3);}
+  });
+}
+
+function drawPost(){
+  const c=$('post'); const {x,w,h}=fitCanvas(c,200); const q=results[spotlight], j=jobs[spotlight];
+  x.fillStyle='#0f1014'; x.fillRect(0,0,w,h);
+  const bins=40, hist=new Array(bins).fill(0), maxX=0.8;
+  q.draws.forEach(v=>{const b=Math.min(bins-1,Math.floor(v/maxX*bins)); hist[b]++;});
+  const mx=Math.max(...hist), pad=24, bw=(w-pad*2)/bins;
+  hist.forEach((v,i)=>{const bh=(h-pad*2)*v/mx; const xc=i/bins*maxX; x.fillStyle=xc>=CUT?'#e8452c':'#9a9ba6'; x.fillRect(pad+i*bw+1,h-pad-bh,bw-2,bh);});
+  const cx=pad+CUT/maxX*(w-pad*2); x.strokeStyle='#f5dc4a'; x.setLineDash([4,3]); x.beginPath(); x.moveTo(cx,8); x.lineTo(cx,h-pad); x.stroke(); x.setLineDash([]);
+  x.fillStyle='#ececf2'; x.font='12px "Space Mono",monospace'; x.fillText('20%',cx+4,18); x.fillText('0%',pad,h-6); x.fillText('80%',w-pad-28,h-6);
+  const sorted=Array.from(q.draws).sort((a,b)=>a-b);
+  $('spot').innerHTML='Job #'+(spotlight+1)+': <b>'+q.s+'</b> slow of <b>'+state.n+'</b> runs. P(rate &gt; 20%) = <b>'+q.p.toFixed(2)+'</b>; 90% credible interval <b>'+pct(sorted[Math.floor(DRAWS*.05)])+'–'+pct(sorted[Math.floor(DRAWS*.95)])+'</b>. Truth: '+(j.reg?'<b style="color:#ff8a76">regressed</b>':'healthy')+' ('+pct(j.rate)+'). Click any job to inspect it.';
+}
+
+function drawSweep(){
+  const c=$('sweep'); const {x,w,h}=fitCanvas(c,220); const pad=34;
+  x.fillStyle='#0f1014'; x.fillRect(0,0,w,h);
+  x.strokeStyle='#33343d'; x.lineWidth=1; x.fillStyle='#c9cad3'; x.font='12px "Space Mono",monospace';
+  [0,.5,1].forEach(v=>{const y=h-pad-(h-pad*1.6)*v; x.beginPath(); x.moveTo(pad,y); x.lineTo(w-10,y); x.stroke(); x.fillText(Math.round(v*100)+'%',2,y+4);});
+  const P=[],R=[]; for(let t=50;t<=99;t++){const s=score(results,t/100);P.push(s.prec);R.push(s.rec);}
+  const X=i=>pad+(w-pad-10)*i/49, Y=v=>h-pad-(h-pad*1.6)*v;
+  [[P,'#e8452c'],[R,'#7da848']].forEach(([arr,col])=>{x.strokeStyle=col;x.lineWidth=3;x.beginPath();arr.forEach((v,i)=>i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v)));x.stroke();});
+  const ti=Math.round(state.tau*100)-50; x.strokeStyle='#f5dc4a'; x.lineWidth=2; x.setLineDash([5,4]); x.beginPath(); x.moveTo(X(ti),8); x.lineTo(X(ti),h-pad); x.stroke(); x.setLineDash([]);
+  x.fillStyle='#c9cad3'; x.fillText('τ = 0.50',pad,h-10); x.fillText('0.99',w-46,h-10);
+}
+
+function memo(sc,nv){
+  const ok=sc.prec>=0.70&&sc.rec>=0.50&&sc.fp100<=3&&state.n<=12;
+  let verdict, plan, next, vp, risks;
+  if(ok){
+    verdict='Ship it: badge jobs when P(slow rate > 20%) ≥ '+state.tau.toFixed(2)+' after '+state.n+' runs.';
+    plan='Week 1: shadow mode, log badges without showing them, compare to owner-confirmed regressions. Week 2–3: 10% of workspaces see the badge on the job list only. Week 4: add the weekly digest if precision holds ≥ 70% on confirmed cases.';
+    next='Wire the badge to open Genie Code with the slow query pre-selected, and measure Optimize click-through.';
+    vp='We can point owners at the jobs that really slowed down with '+pct(sc.prec)+' precision, and catch '+pct(sc.rec)+' of regressions after '+state.n+' runs, so I recommend a staged rollout starting next sprint.';
+  } else if(sc.prec<0.70||sc.fp100>3){
+    verdict='Hold the proactive badge: this rule nags more than it helps.';
+    plan='Keep Optimize as a pull-only button on the performance tab. Re-run the sweep with a higher τ or a stronger prior until precision clears 70%.';
+    next='Raise τ (the sweep chart shows where precision crosses 70%) and check that recall stays above 50%.';
+    vp='At these settings '+pct(1-sc.prec)+' of badges would be false alarms, so I would not push them to users yet; we will tune the threshold before any rollout.';
+  } else if(sc.rec<0.50){
+    verdict='Ship quietly: trustworthy, but it misses too many regressions to be the main alert.';
+    plan='Show the badge on the job page only (no notifications). Pair it with a weekly "biggest slowdowns" list ranked by posterior mean.';
+    next='Try lowering τ or using more runs; consider a second tier ("watching") for jobs between 0.6 and τ.';
+    vp='When it fires it is right '+pct(sc.prec)+' of the time, but it catches only '+pct(sc.rec)+' of slowdowns, so it is a helpful hint, not yet the safety net.';
+  } else {
+    verdict='Works, but too slow to react: it needs '+state.n+' runs before deciding.';
+    plan='Ship for daily and hourly jobs where '+state.n+' runs arrive quickly; keep weekly jobs on pull-only.';
+    next='Test whether 8–12 runs with a slightly lower τ keeps precision above 70%.';
+    vp='The rule is accurate but waits '+state.n+' runs, so I would launch it first for frequently scheduled jobs.';
+  }
+  risks='Baseline drift: if inputs grow every week, "1.5× the median" flags growth, not regressions; we need input-size normalization. Badge fatigue if the same job stays badged for weeks. The 18% regression share and rates here are simulated; real fleets need calibration against owner feedback.';
+  $('mVerdict').textContent=verdict;
+  $('mEvidence').innerHTML='Across 240 simulated jobs with '+state.n+' runs each: <b>'+sc.badges+'</b> badges, precision <b>'+pct(sc.prec)+'</b>, recall <b>'+pct(sc.rec)+'</b>, <b>'+sc.fp100.toFixed(1)+'</b> false badges per 100 jobs. The naive raw-fraction rule gives '+pct(nv.prec)+' precision with '+nv.fp100.toFixed(1)+' false badges per 100 jobs, so the prior is doing real work at low run counts.';
+  $('mRisks').textContent=risks; $('mPlan').textContent=plan; $('mNext').textContent=next; $('mVP').textContent='What I\'d tell the VP: '+vp;
+}
+
+// interactions
+['n','tau','k'].forEach(id=>$(id).addEventListener('input',e=>{
+  if(id==='tau'){state.tau=+e.target.value/100; draw();} else {state[id]=+e.target.value; render();}
+}));
+$('reroll').addEventListener('click',()=>{seed=(seed*48271+17)%99991+1; buildFleet(); pickSpot(); render();});
+$('fleet').addEventListener('click',ev=>{const rect=ev.target.getBoundingClientRect(); const col=Math.floor((ev.clientX-rect.left)/geo.cell), row=Math.floor((ev.clientY-rect.top)/geo.cell); const i=row*geo.cols+col; if(i>=0&&i<N_JOBS){spotlight=i; drawFleet(); drawPost();}});
+let playing=false;
+$('play').addEventListener('click',()=>{
+  if(playing) return; const target=state.n;
+  if(reduced){render();return;}
+  playing=true; let n=2; const step=()=>{state.n=n; $('n').value=n; render(); if(n<target){n++; setTimeout(step,140);} else playing=false;}; step();
+});
+function pickSpot(){ // a borderline regressed job makes the best story
+  let best=0,bd=9; const res=evaluate(state.n,state.k); res.forEach((q,i)=>{const d=Math.abs(q.p-0.7); if(jobs[i].reg&&d<bd){bd=d;best=i;}}); spotlight=best;
+}
+let rz; window.addEventListener('resize',()=>{clearTimeout(rz); rz=setTimeout(draw,120);});
+buildFleet(); pickSpot(); render();
+})();
+</script>
+</body>
+</html>
