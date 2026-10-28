@@ -33,10 +33,10 @@ a{color:inherit}
 .echo span:nth-child(2){margin-right:8vw}
 .echo span:nth-child(3){margin-right:2vw}
 .kicker{font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#5b3550}
-.hero h1{position:relative;font-weight:400;font-size:clamp(40px,8vw,104px);line-height:.98;margin:.2em 0 .3em;color:var(--hero-ink);letter-spacing:-.03em;max-width:12ch}
+.hero h1{position:relative;z-index:1;font-weight:400;font-size:clamp(40px,8vw,104px);line-height:.98;margin:.2em 0 .3em;color:var(--hero-ink);letter-spacing:-.03em;max-width:12ch}
 .hero h1 .l2{display:block;padding-left:1.2ch}
 .hero h1 .l3{display:block;padding-left:.4ch}
-.hero .sub{position:relative;font-size:clamp(17px,2.2vw,21px);max-width:620px;color:#3b2333}
+.hero .sub{position:relative;z-index:1;font-size:clamp(17px,2.2vw,21px);max-width:620px;color:#3b2333}
 .hero .sub a{color:#8a145f;font-weight:600}
 .byline{position:relative;margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .chip{display:inline-block;padding:7px 14px;border-radius:999px;border:1.5px solid #b0207f;color:#7a1655;background:#fff9fd;font-size:14px;font-weight:600}
@@ -49,7 +49,7 @@ a{color:inherit}
 .section .lede{max-width:720px;margin:0 0 28px;color:#4a2234}
 .cake-bg{background:linear-gradient(180deg,#efeef0 0,#f6e4ec 100%)}
 .masonry{columns:3 300px;column-gap:20px}
-.card{break-inside:avoid;margin:0 0 20px;position:relative;border-radius:18px 18px 22px 22px;padding:22px 20px 30px;
+.card{break-inside:avoid;-webkit-column-break-inside:avoid;display:inline-block;width:100%;margin:10px 0 22px;position:relative;border-radius:18px 18px 22px 22px;padding:22px 20px 30px;
   background:radial-gradient(120% 80% at 30% 0%,#fde8f1 0,var(--satin) 55%,#f1aecb 100%);color:var(--ink);
   box-shadow:0 2px 0 #e79bbd,0 14px 30px -12px rgba(140,30,80,.35)}
 .card::before{content:"";position:absolute;left:0;right:0;top:-9px;height:12px;
@@ -136,6 +136,8 @@ footer .credits{font-size:11px;color:#a3a4b0;margin-top:10px;line-height:1.6}
 footer .credits a{color:#c4c5d0}
 
 @media (max-width:860px){
+  .echo{position:relative;right:auto;top:auto;font-size:clamp(56px,19vw,120px);margin:-10px 0 8px;opacity:.5}
+  .echo span:nth-child(2),.echo span:nth-child(3){margin-right:0}
   .grid{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .code-grid{grid-template-columns:1fr}
@@ -155,7 +157,7 @@ footer .credits a{color:#c4c5d0}
   <div class="wrap">
     <div class="echo" aria-hidden="true"><span>nudge</span><span>not</span><span>nag</span></div>
     <div class="kicker">APM Lab · decision prototype</div>
-    <h1>I nudge<span class="l2">only when</span><span class="l3">I'm sure.</span></h1>
+    <h1>I nudge <span class="l2">only when </span><span class="l3">I'm sure.</span></h1>
     <p class="sub">Mirrors the Oct 26, 2026 launch of <a href="https://docs.databricks.com/aws/en/release-notes/product/2026/october" target="_blank" rel="noopener">Lakeflow Performance Observability (GA)</a>: job-level query performance metrics plus an Optimize button that opens Genie Code. The hard call: <b>when should a job page wave that Optimize nudge at you</b> instead of waiting to be clicked?</p>
     <div class="byline">
       <span class="chip floaty">Shriya Shekatkar</span>
@@ -234,7 +236,7 @@ footer .credits a{color:#c4c5d0}
     <div class="grid">
       <div class="panel">
         <p class="plate-title"><span class="rivet"></span>Fleet of jobs <span class="rivet"></span></p>
-        <canvas id="fleet" width="700" height="420" role="img" aria-label="Grid of simulated jobs colored by whether they were badged and whether they truly regressed. Click a job to inspect its posterior."></canvas>
+        <canvas id="fleet" width="700" height="420" role="img" tabindex="0" aria-label="Grid of simulated jobs colored by whether they were badged and whether they truly regressed. Click a job, or focus here and use the arrow keys, to inspect its posterior."></canvas>
         <div class="legend">
           <span><i style="background:#e8452c"></i>badged, truly slow</span>
           <span><i style="background:#f5dc4a"></i>badged, false alarm</span>
@@ -247,7 +249,7 @@ footer .credits a{color:#c4c5d0}
         <p class="plate-title"><span class="rivet"></span>Controls</p>
         <div class="controls">
           <div class="ctrl"><label for="n">Runs observed per job <output id="nO"></output></label><input id="n" type="range" min="2" max="30" value="10"><small>More history = sharper posteriors, but a slower badge.</small></div>
-          <div class="ctrl"><label for="tau">Confidence bar τ <output id="tauO"></output></label><input id="tau" type="range" min="50" max="99" value="75"><small>Badge when P(slow-run rate &gt; 20% | runs) ≥ τ.</small></div>
+          <div class="ctrl"><label for="tau">Confidence bar τ <output id="tauO"></output></label><input id="tau" type="range" min="50" max="99" value="80"><small>Badge when P(slow-run rate &gt; 20% | runs) ≥ τ.</small></div>
           <div class="ctrl"><label for="k">Prior strength (pseudo-runs) <output id="kO"></output></label><input id="k" type="range" min="1" max="40" value="4"><small>Prior centered at a 10% slow-run rate, what a healthy fleet looks like.</small></div>
           <div class="btnrow">
             <button class="btn" id="play">Play the runs</button>
@@ -311,18 +313,20 @@ footer .credits a{color:#c4c5d0}
         <h3>1 · Count slow runs per job (SQL)</h3>
 <pre><code>WITH runs AS (
   SELECT job_id, run_id, duration_s,
-         percentile(duration_s, 0.5)
-           OVER (PARTITION BY job_id
-                 ORDER BY start_ts
-                 ROWS BETWEEN 30 PRECEDING AND 11 PRECEDING) AS base_med,
-         ROW_NUMBER() OVER (PARTITION BY job_id
-                            ORDER BY start_ts DESC) AS rn
+    percentile(duration_s, 0.5) OVER (
+      PARTITION BY job_id ORDER BY start_ts
+      ROWS BETWEEN 30 PRECEDING AND 11 PRECEDING
+    ) AS base_med,
+    ROW_NUMBER() OVER (
+      PARTITION BY job_id ORDER BY start_ts DESC
+    ) AS rn
   FROM ops.lab.job_run_history
   WHERE start_ts &gt;= current_date() - INTERVAL 30 DAYS
 )
 SELECT job_id,
-       COUNT(*)                                  AS n_runs,
-       SUM(IF(duration_s &gt; 1.5 * base_med, 1, 0)) AS n_slow
+  COUNT(*) AS n_runs,
+  SUM(IF(duration_s &gt; 1.5 * base_med, 1, 0))
+    AS n_slow
 FROM runs
 WHERE rn &lt;= 10 AND base_med IS NOT NULL
 GROUP BY job_id;</code></pre>
@@ -331,7 +335,7 @@ GROUP BY job_id;</code></pre>
         <h3>2 · Posterior tail + badge (Python)</h3>
 <pre><code>import numpy as np
 rng = np.random.default_rng(102)
-A, B, CUT, TAU = 0.4, 3.6, 0.20, 0.75
+A, B, CUT, TAU = 0.4, 3.6, 0.20, 0.80
 
 df = spark.table("ops.lab.job_slow_counts").toPandas()
 draws = rng.beta(A + df.n_slow.values[:, None],
@@ -376,14 +380,14 @@ function gamma(r,a){ if(a<1){return gamma(r,a+1)*Math.pow(r(),1/a);} const d=a-1
     if(u<1-0.0331*x*x*x*x)return d*v; if(Math.log(u)<0.5*x*x+d*(1-v+Math.log(v)))return d*v;}}
 function beta(r,a,b){const x=gamma(r,a),y=gamma(r,b);return x/(x+y);}
 
-let seed=102, jobs=[], state={n:10,tau:0.75,k:4}, spotlight=0, results=null;
+let seed=102, jobs=[], state={n:10,tau:0.80,k:4}, spotlight=0, results=null;
 const $=id=>document.getElementById(id);
 
 function buildFleet(){
   const r=rngFrom(seed); jobs=[];
   for(let i=0;i<N_JOBS;i++){
     const reg = r()<P_REG;
-    const rate = reg ? beta(r,7,13) : beta(r,3,27);
+    const rate = reg ? beta(r,8,12) : beta(r,3,27);
     const runs=[]; for(let j=0;j<MAX_RUNS;j++) runs.push(r()<rate?1:0); // Ch1: count uniforms below the rate
     jobs.push({reg,rate,runs});
   }
@@ -423,7 +427,7 @@ function render(){
 function draw(){
   const sc=score(results,state.tau), nv=naiveScore(results);
   $('kpis').innerHTML=
-    kpi('Precision',pct(sc.prec),'goal ≥ 70%',sc.prec>=0.70)+
+    kpi('Precision',sc.badges?pct(sc.prec):'—','goal ≥ 70%',sc.badges>0&&sc.prec>=0.70)+
     kpi('Recall',pct(sc.rec),'goal ≥ 50%',sc.rec>=0.50)+
     kpi('False badges /100',sc.fp100.toFixed(1),'goal ≤ 3',sc.fp100<=3)+
     kpi('Runs to decide',state.n,'goal ≤ 12',state.n<=12);
@@ -465,7 +469,7 @@ function drawPost(){
   const cx=pad+CUT/maxX*(w-pad*2); x.strokeStyle='#f5dc4a'; x.setLineDash([4,3]); x.beginPath(); x.moveTo(cx,8); x.lineTo(cx,h-pad); x.stroke(); x.setLineDash([]);
   x.fillStyle='#ececf2'; x.font='12px "Space Mono",monospace'; x.fillText('20%',cx+4,18); x.fillText('0%',pad,h-6); x.fillText('80%',w-pad-28,h-6);
   const sorted=Array.from(q.draws).sort((a,b)=>a-b);
-  $('spot').innerHTML='Job #'+(spotlight+1)+': <b>'+q.s+'</b> slow of <b>'+state.n+'</b> runs. P(rate &gt; 20%) = <b>'+q.p.toFixed(2)+'</b>; 90% credible interval <b>'+pct(sorted[Math.floor(DRAWS*.05)])+'–'+pct(sorted[Math.floor(DRAWS*.95)])+'</b>. Truth: '+(j.reg?'<b style="color:#ff8a76">regressed</b>':'healthy')+' ('+pct(j.rate)+'). Click any job to inspect it.';
+  $('spot').innerHTML='Job #'+(spotlight+1)+': <b>'+q.s+'</b> slow of <b>'+state.n+'</b> runs. P(rate &gt; 20%) = <b>'+q.p.toFixed(2)+'</b>; 90% credible interval <b>'+pct(sorted[Math.floor(DRAWS*.05)])+'–'+pct(sorted[Math.floor(DRAWS*.95)])+'</b>. Truth: '+(j.reg?'<b style="color:#ff8a76">regressed</b>':'healthy')+' ('+pct(j.rate)+'). Click any job (or use arrow keys on the grid) to inspect it.';
 }
 
 function drawSweep(){
@@ -483,11 +487,21 @@ function drawSweep(){
 function memo(sc,nv){
   const ok=sc.prec>=0.70&&sc.rec>=0.50&&sc.fp100<=3&&state.n<=12;
   let verdict, plan, next, vp, risks;
-  if(ok){
+  if(sc.badges===0){
+    verdict='Too strict: not a single job gets badged at these settings.';
+    plan='No rollout yet. A badge that never fires teaches users nothing and hides real regressions.';
+    next='Lower τ or the prior strength until the sweep chart shows recall above 50%.';
+    vp='This setting is so cautious it never speaks up, so it needs tuning before it is worth shipping.';
+  } else if(ok){
     verdict='Ship it: badge jobs when P(slow rate > 20%) ≥ '+state.tau.toFixed(2)+' after '+state.n+' runs.';
     plan='Week 1: shadow mode, log badges without showing them, compare to owner-confirmed regressions. Week 2–3: 10% of workspaces see the badge on the job list only. Week 4: add the weekly digest if precision holds ≥ 70% on confirmed cases.';
     next='Wire the badge to open Genie Code with the slow query pre-selected, and measure Optimize click-through.';
     vp='We can point owners at the jobs that really slowed down with '+pct(sc.prec)+' precision, and catch '+pct(sc.rec)+' of regressions after '+state.n+' runs, so I recommend a staged rollout starting next sprint.';
+  } else if(sc.prec>=0.70&&sc.fp100>3){
+    verdict='Close, but hold: badges are mostly right, yet false alarms at fleet scale are over budget.';
+    plan='Keep Optimize as a pull-only button while we tune. A 1-point rise in τ or one more run of history is usually enough to bring false badges under 3 per 100 jobs.';
+    next='Nudge τ up and watch the false-badge KPI; confirm recall stays above 50%.';
+    vp='The badge is right '+pct(sc.prec)+' of the time, but across a big fleet that is still '+sc.fp100.toFixed(1)+' false alarms per 100 jobs, so we tune before launch.';
   } else if(sc.prec<0.70||sc.fp100>3){
     verdict='Hold the proactive badge: this rule nags more than it helps.';
     plan='Keep Optimize as a pull-only button on the performance tab. Re-run the sweep with a higher τ or a stronger prior until precision clears 70%.';
@@ -525,6 +539,7 @@ $('play').addEventListener('click',()=>{
 function pickSpot(){ // a borderline regressed job makes the best story
   let best=0,bd=9; const res=evaluate(state.n,state.k); res.forEach((q,i)=>{const d=Math.abs(q.p-0.7); if(jobs[i].reg&&d<bd){bd=d;best=i;}}); spotlight=best;
 }
+$('fleet').addEventListener('keydown',ev=>{const m={ArrowRight:1,ArrowLeft:-1,ArrowDown:geo.cols,ArrowUp:-geo.cols}[ev.key]; if(m===undefined)return; ev.preventDefault(); spotlight=Math.min(N_JOBS-1,Math.max(0,spotlight+m)); drawFleet(); drawPost();});
 let rz; window.addEventListener('resize',()=>{clearTimeout(rz); rz=setTimeout(draw,120);});
 buildFleet(); pickSpot(); render();
 })();

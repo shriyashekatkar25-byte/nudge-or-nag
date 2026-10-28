@@ -22,7 +22,7 @@ The pull-only button already exists. The harder question is whether, and when, t
 ## What the prototype shows
 - **Customer problem framing:** the badge is judged by trust (precision) first, not by how many jobs it flags.
 - **Prototyping:** 240 seeded synthetic jobs; sliders for run history, confidence bar τ and prior strength; a canvas fleet map, a per-job posterior histogram, and a precision/recall sweep across τ.
-- **Data-driven decisions:** it compares the Bayesian rule with a naive "raw slow fraction > 20%" rule. With little history the naive rule produces roughly three times as many false badges.
+- **Data-driven decisions:** it compares the Bayesian rule with a naive "raw slow fraction > 20%" rule. At the default settings the naive rule raises roughly four times as many false badges (about 10 vs 2.5 per 100 jobs).
 - **SQL/Python:** an illustrative pipeline that counts slow runs per job in SQL, then draws Beta posteriors in NumPy and writes a badge table.
 - **Clear writing:** a director memo rewrites itself from the simulation results, ending with a one-sentence VP summary.
 
